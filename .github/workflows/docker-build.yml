@@ -1,0 +1,58 @@
+name: 构建 Docker 镜像
+
+on:
+  schedule:
+    - cron: '0 16 * * *'  # UTC 16:00 (北京时间 0:00)
+  workflow_dispatch:  # 支持手动触发
+  push:
+    paths:
+      - '.github/workflows/docker-build.yml'
+      - 'Dockerfile'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 获取最新版本
+        id: version
+        run: |
+          LATEST_VERSION=$(pip index versions python-emby-proxy | grep python-emby-proxy | cut -d'(' -f2 | cut -d')' -f1 | head -n1)
+          echo "version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: 检查镜像是否存在
+        id: check_image
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          if docker manifest inspect ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:${VERSION} >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 构建并推送 Docker 镜像
+        if: steps.check_image.outputs.exists != 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:${{ steps.version.outputs.version }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache,mode=max 
