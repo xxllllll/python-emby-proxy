@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -6,11 +7,13 @@ WORKDIR /app
 COPY requirements.txt .
 
 # 安装编译工具和依赖
-RUN apt-get update && \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,target=/var/cache/apt \
+    apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
-    && pip install --no-cache-dir -r requirements.txt \
+    && pip install -r requirements.txt \
     && apt-get remove -y gcc python3-dev \
     && apt-get autoremove -y \
     && apt-get clean \

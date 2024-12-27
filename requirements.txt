@@ -1,2 +1,2 @@
-blacksheep
+blacksheep --only-binary :all: 
 python-emby-proxy
