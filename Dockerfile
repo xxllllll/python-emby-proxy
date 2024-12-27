@@ -7,8 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # 安装编译工具和依赖
-RUN --mount=type=cache,target=/var/cache/pip \
-    --mount=type=cache,target=/var/cache/apt \
+RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
