@@ -8,10 +8,12 @@ on:
     paths:
       - '.github/workflows/docker-build.yml'
       - 'Dockerfile'
+      - 'requirements.txt'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120  # 设置更长的超时时间
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -54,5 +56,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:${{ steps.version.outputs.version }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache
+          cache-from: |
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache
+            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:latest
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache,mode=max 
