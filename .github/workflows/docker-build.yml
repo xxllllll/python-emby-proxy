@@ -8,7 +8,6 @@ on:
     paths:
       - '.github/workflows/docker-build.yml'
       - 'Dockerfile'
-      - 'requirements.txt'
 
 jobs:
   build:
@@ -55,10 +54,4 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:${{ steps.version.outputs.version }}
-          cache-from: |
-            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache
-            type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:latest
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:buildcache,mode=max
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1 
+            ${{ secrets.DOCKERHUB_USERNAME }}/python-emby-proxy:${{ steps.version.outputs.version }} 
